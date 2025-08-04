@@ -1,18 +1,23 @@
 import pickle
 import streamlit as st
 import requests
+import zipfile
+import os
+import pandas as pd
 
-# Load data
+# --- Unzip movie_dict.pkl if not already extracted ---
+if not os.path.exists('movie_dict.pkl'):
+    with zipfile.ZipFile('movie_dict.pkl.zip', 'r') as zip_ref:
+        zip_ref.extractall()
+
+# --- Load data ---
 movies = pickle.load(open('movie_dict.pkl', 'rb'))
 similarity = pickle.load(open('similarity.pkl', 'rb'))
 
-# Convert to DataFrame
-import pandas as pd
-
+# --- Convert to DataFrame ---
 movies = pd.DataFrame(movies)
 
-
-# Function to fetch movie poster using TMDb API
+# --- Function to fetch movie poster using TMDb API ---
 def fetch_poster(movie_id):
     try:
         url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=55c46c9b3f194cdbae7b63f37f1afc0b&language=en-US"
@@ -28,8 +33,7 @@ def fetch_poster(movie_id):
         print(f"Error fetching poster for movie_id {movie_id}: {e}")
         return "https://via.placeholder.com/500x750?text=Error"
 
-
-# Recommend function
+# --- Recommend movies ---
 def recommend(movie):
     movie_index = movies[movies['title'] == movie].index[0]
     distances = similarity[movie_index]
@@ -43,8 +47,7 @@ def recommend(movie):
         recommended_posters.append(fetch_poster(movie_id))
     return recommended_movies, recommended_posters
 
-
-# Streamlit app UI
+# --- Streamlit UI ---
 st.set_page_config(page_title="Movie Recommender System", layout="wide")
 st.title('🎬 Movie Recommender System')
 
